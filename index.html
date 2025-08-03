@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Experiência Toy Art AR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      .logo-container {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        z-index: 10001;
+      }
+      .logo-container img {
+        height: 40px;
+        width: auto;
+        display: block;
+        opacity: 0.8;
+      }
+
+      /* Cor do scanner padrão do MindAR */
+      .mindar-ui-scanning .scanning-frame {
+        border-color: #ff0000;
+      }
+
+      /* 1. CSS PARA A TELA DE "INICIAR" (substitui o loading) */
+      #start-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10000;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        font-family: sans-serif;
+        font-size: 20px;
+        text-align: center;
+        /* Centraliza o conteúdo */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Link do logo no canto -->
+    <a
+      href="https://bio.link/orbee360"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="logo-container"
+    >
+      <img src="./orbee.png" alt="Orbee 360" />
+    </a>
+
+    <!-- 2. TELA DE "INICIAR" para habilitar o som -->
+    <div id="start-overlay">
+      <p>Toque para iniciar a experiência</p>
+    </div>
+
+    <!-- Cena MindAR -->
+    <a-scene
+      mindar-image="imageTargetSrc: ./targets.mind;"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+    >
+      <a-assets>
+        <!-- 3. VÍDEO SEM "muted" para permitir som -->
+        <video id="video" src="./video.mp4" loop="true" playsinline></video>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity mindar-image-target="targetIndex: 0" video-controller>
+        <!-- 4. TAMANHO DO PLANO DOBRADO (width="2" e height="1.125") -->
+        <a-plane
+          src="#video"
+          position="0 0 0"
+          height="1.125"
+          width="2"
+          rotation="0 0 0"
+        ></a-plane>
+      </a-entity>
+    </a-scene>
+
+    <!-- 5. JAVASCRIPT atualizado para controlar o som e o vídeo -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const startOverlay = document.querySelector('#start-overlay');
+        const video = document.querySelector('#inunda-video');
+
+        // Lógica para a tela de "Iniciar"
+        startOverlay.addEventListener('click', () => {
+          // Esconde a tela de "Iniciar"
+          startOverlay.style.display = 'none';
+          // O truque para "desbloquear" o áudio no navegador
+          // Toca e pausa o vídeo rapidamente. Agora ele poderá tocar com som depois.
+          video.play();
+          video.pause();
+        });
+
+        // Componente A-Frame para controlar o play/pause do vídeo
+        AFRAME.registerComponent('video-controller', {
+          init: function () {
+            this.video = video; // Usamos a referência de vídeo que já pegamos
+            this.targetEntity = this.el;
+
+            this.video.pause();
+
+            this.targetEntity.addEventListener('targetFound', () => {
+              this.video.play();
+            });
+
+            this.targetEntity.addEventListener('targetLost', () => {
+              this.video.pause();
+            });
+          },
+        });
+      });
+    </script>
+  </body>
+</html>
